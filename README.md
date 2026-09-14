@@ -167,12 +167,12 @@ Deploy the Dataform project via Git, and the DAGs via Cloud Composer.
 
 ## Contents
 
-- **[01 · Beginners guide](docs/01-beginners-guide.md)** — plain-English concepts, terminology glossary, and why this is a *decomposition*, not a 1:1 copy.
+- **[01 · Beginners guide](docs/01-beginners-guide.md)** — basic concepts, terminology glossary, and why this is a *decomposition*, not a 1:1 copy.
 - **[02 · Architecture & routing matrix](docs/02-architecture-and-routing.md)** — how DataWorks concepts map to GCP services, and how to route every node type.
 - **[03 · Migration steps](docs/03-migration-steps.md)** — the 6-step, metadata-driven playbook (extract → structure → generate → review → validate → cut over).
 - **[04 · Case study: house-buying analysis](docs/04-case-study-house-buying.md)** — a real example from Alibaba's tutorial, converted end-to-end with code.
-- **[05 · FlowSpec JSON reference](docs/05-flowspec-json-reference.md)** — every property of the extractor's FlowSpec output, with values and plain-English explanations.
-- **[05b · CSV override reference](docs/05b-csv-override-reference.md)** — the human-editable layer for reviewing and redirecting routing decisions before generation.
+- **[05 · FlowSpec JSON reference](docs/05-flowspec-json-reference.md)** — every property of the extractor's FlowSpec output, with values and explanations.
+- **[05b · CSV override reference](docs/05b-csv-override-reference.md)** — the human-editable layer for reviewing and redirecting routing decisions before code generation.
 - **[06 · Tools architecture](docs/06-tools-architecture.md)** — how every module fits together, data flow, configuration, and how to extend the system.
 - **[07 · Appendices & resources](docs/07-appendices-and-resources.md)** — variable mapping, MaxCompute→BigQuery type map, API cheat-sheet, and external resources.
 
