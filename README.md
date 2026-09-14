@@ -1,6 +1,6 @@
 # DataWorks → GCP Pipeline Migration Guide
 
-A playbook to migrate enterprise data pipelines from **Alibaba Cloud DataWorks** to code driven **Google Cloud analytics platform**:
+A playbook to migrate enterprise data pipelines from GUI based **Alibaba Cloud DataWorks** to code driven **Google Cloud analytics platform**:
 
 | Concern | DataWorks (source) | Google Cloud (target) |
 | --- | --- | --- |
@@ -10,10 +10,17 @@ A playbook to migrate enterprise data pipelines from **Alibaba Cloud DataWorks**
 | Data integration (sync) | Data Integration | **BigQuery Data Transfer / Datastream / Dataflow** |
 | Governance / metadata | Data Map | **Knowledge Catalog** |
 
-> This guide is a beginner-friendly rewrite of *"DataWorks → GCP Pipeline
-> Migration Guide v3.1"* (working draft), grounded in the current Alibaba Cloud
-> and Google Cloud documentation (verified mid-2026). It adds a complete worked
+> This guide is a hands-on implementation of *"DataWorks → GCP Pipeline
+> Migration Guide v3.1"* (working draft). It adds a complete worked
 > example, runnable Python code, and a curated knowledge base.
+
+How the pipeline works:
+1. Assume you have existing data pipeline run at Alicloud's Dataworks. The aim is to do semi automatic migration rather than coding it by hand
+2. Collect current pipeline metadata by reading Dataworks Open API
+3. Save extracted metadata and flows inti a csv file. Human needs to verify this csv before continuing the process
+4. Use small py script to read csv and pass it as context to Gemini. The LLM translate the pipeline into GCP data pipeline code.
+5. The outcome is Airflow + Dataform/ SQL scripts/ Py code/ Dataflow; whichever is suitable.
+6. Deploy the conversion result into GCP.
 
 ---
 
