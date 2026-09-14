@@ -1,4 +1,5 @@
 # 05 · DataWorks FlowSpec JSON Reference
+This section explains the structure of Dataworks flow and their meanings. 
 
 > **Goal:** a complete, beginner-friendly reference for the FlowSpec JSON format —
 > every property, its possible values, and what it means. Use this to read any
