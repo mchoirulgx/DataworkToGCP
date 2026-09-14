@@ -1,5 +1,7 @@
 # 04 · Case Study: House-Buying Analysis (end to end)
 
+The sample pipeline to be migrated is here: https://www.alibabacloud.com/help/en/dataworks/user-guide/dataworks-for-application-development
+
 > **Goal:** take a real, simple DataWorks pipeline and convert it to GCP,
 > step by step, with every file involved. This mirrors Alibaba's own public
 > tutorial — *"Develop and analyze data in DataWorks by building a house-buying
