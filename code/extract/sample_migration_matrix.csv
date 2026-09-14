@@ -1,0 +1,4 @@
+workflow,node_id,node_name,command,input_tables,output_tables,schedule,gcp_target,review_notes,skip
+house_buying_analysis,n_start,workshop_start,VIRTUAL,,,02 00 * * *,EmptyOperator,,
+house_buying_analysis,n_ddl,ddl_result_table,ODPS_SQL,,result_table,02 00 * * *,Dataform .sqlx,,
+house_buying_analysis,n_insert,insert_result_table,ODPS_SQL,bank_data,result_table,02 00 * * *,Dataform .sqlx,,

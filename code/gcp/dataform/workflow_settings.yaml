@@ -1,0 +1,10 @@
+# Mirror the values in code/.env.example (GCP_PROJECT_ID, GCP_REGION,
+# DATAFORM_DEFAULT_SCHEMA, DATAFORM_ASSERTION_SCHEMA). Dataform config is
+# committed literally and cannot read env vars — keep these two in sync.
+defaultProject: my-gcp-project
+defaultLocation: asia-southeast2
+defaultDataset: dwh
+defaultAssertionDataset: dwh_assertions
+vars:
+  environment: prod
+  start_date: "2025-01-01"

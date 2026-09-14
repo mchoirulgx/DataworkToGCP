@@ -1,0 +1,6 @@
+{
+  "workflows": [
+    "house_buying_analysis",
+    { "name": "daily_sales_report", "id": "463497880880955XXX" }
+  ]
+}

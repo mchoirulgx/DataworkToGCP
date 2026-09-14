@@ -1,0 +1,7 @@
+{
+  "defaultSchema": "dwh",
+  "assertionSchema": "dwh_assertions",
+  "warehouse": "bigquery",
+  "defaultDatabase": "my-gcp-project",
+  "defaultLocation": "asia-southeast2"
+}

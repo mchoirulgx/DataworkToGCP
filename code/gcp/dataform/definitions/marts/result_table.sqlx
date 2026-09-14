@@ -1,0 +1,37 @@
+config {
+  type: "table",
+  tags: ["daily"],
+  description: "Education-level distribution of single people who have mortgages. " +
+               "Migrated from DataWorks nodes ddl_result_table + insert_result_table.",
+  columns: {
+    education: "Education level",
+    num: "Number of persons"
+  },
+  assertions: {
+    nonNull: ["education"],
+    rowConditions: ["num > 0"]
+  }
+}
+
+-- Source SQL (MaxCompute / ODPS_SQL, from insert_result_table):
+--   INSERT OVERWRITE TABLE result_table
+--   SELECT education, COUNT(marital) AS num
+--   FROM bank_data
+--   WHERE housing = 'yes' AND marital = 'single'
+--   GROUP BY education;
+--
+-- Translation notes:
+--   * INSERT OVERWRITE TABLE -> Dataform "table" materialisation (Dataform
+--     generates CREATE OR REPLACE / MERGE for you).
+--   * The separate CREATE TABLE node (ddl_result_table) is absorbed by
+--     Dataform; the model IS the DDL.
+--   * WHERE housing = 'yes' is the ODPS equivalent of BOOL/STRING truthy
+--     comparison; BigQuery keeps the same string literal.
+
+SELECT
+  education,
+  COUNT(marital) AS num
+FROM ${ref("bank_data")}
+WHERE housing = 'yes'
+  AND marital = 'single'
+GROUP BY education

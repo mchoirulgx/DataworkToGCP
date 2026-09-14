@@ -1,0 +1,14 @@
+# Secrets & credentials
+.env
+
+# Extracted metadata / checkpoint DB
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# uv
+uv.lock
