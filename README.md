@@ -21,6 +21,7 @@ How the pipeline works:
 4. Use small py script to read csv and pass it as context to Gemini. The LLM translate the pipeline into GCP data pipeline code.
 5. The outcome is Airflow + Dataform/ SQL scripts/ Py code/ Dataflow; whichever is suitable.
 6. Deploy the conversion result into GCP.
+7. Test the new pipline in new home
 
 ---
 
