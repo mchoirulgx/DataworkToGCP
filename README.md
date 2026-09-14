@@ -70,6 +70,8 @@ A playbook to migrate enterprise data pipelines from **Alibaba Cloud DataWorks**
 DataWorks is a GUI based data orchestration, transformation, and
 governance. For this migration, we extracted metadata from dataworks pipelines using the OpenAPI.
 
+The sample pipeline to be migrated is here: https://www.alibabacloud.com/help/en/dataworks/user-guide/dataworks-for-application-development
+
 ### Step 2 — OpenAPI Extraction
 
 Two API clients are **mandatory** — they live in different SDK packages with
