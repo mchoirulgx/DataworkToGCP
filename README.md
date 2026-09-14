@@ -1,7 +1,6 @@
 # DataWorks → GCP Pipeline Migration Guide
 
-Migrating enterprise data pipelines from **Alibaba Cloud DataWorks (on MaxCompute)**
-to a modern, code-driven **Google Cloud analytics platform**:
+A playbook to migrate enterprise data pipelines from **Alibaba Cloud DataWorks** to code driven **Google Cloud analytics platform**:
 
 | Concern | DataWorks (source) | Google Cloud (target) |
 | --- | --- | --- |
