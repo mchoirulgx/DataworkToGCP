@@ -1,3 +1,7 @@
+The csv is exported output from Dataworks Open API reading. It contains critical metadata from Dataworks pipeline, will be used for guideline in migration and code generation.
+
+Human needs to verify this csv for correctness before continuing to code generation.
+
 # 05b · CSV Override Reference
 
 > **Goal:** a complete reference for the `migration_matrix.csv` file — the
