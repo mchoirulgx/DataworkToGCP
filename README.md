@@ -8,7 +8,7 @@ A playbook to migrate enterprise data pipelines from **Alibaba Cloud DataWorks**
 | SQL transformation | Data Studio (visual SQL) | **Dataform** (`.sqlx`) |
 | Warehouse / compute | MaxCompute | **BigQuery** |
 | Data integration (sync) | Data Integration | **BigQuery Data Transfer / Datastream / Dataflow** |
-| Governance / metadata | Data Map | **Dataplex** |
+| Governance / metadata | Data Map | **Knowledge Catalog** |
 
 > This guide is a beginner-friendly rewrite of *"DataWorks → GCP Pipeline
 > Migration Guide v3.1"* (working draft), grounded in the current Alibaba Cloud
@@ -67,9 +67,8 @@ A playbook to migrate enterprise data pipelines from **Alibaba Cloud DataWorks**
 
 ### Step 1 — Source: Alibaba Cloud DataWorks
 
-DataWorks is a coupled UI that fuses orchestration, transformation, and
-governance. Pipelines run on **MaxCompute** (the warehouse). For this migration,
-we extracted metadata from 3,000+ pipelines using the OpenAPI.
+DataWorks is a GUI based data orchestration, transformation, and
+governance. For this migration, we extracted metadata from dataworks pipelines using the OpenAPI.
 
 ### Step 2 — OpenAPI Extraction
 
