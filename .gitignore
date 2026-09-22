@@ -1,0 +1,25 @@
+# Secrets & credentials
+.env
+*.env
+!.env.example
+.df-credentials.json
+*-credentials.json
+*.pem
+*.key
+
+# Extracted metadata / checkpoint DB / generated project
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/

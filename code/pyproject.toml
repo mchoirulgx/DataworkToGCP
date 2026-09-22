@@ -1,0 +1,31 @@
+[project]
+name = "dataworks-to-gcp"
+version = "0.1.0"
+description = "Metadata-driven migration toolkit: Alibaba Cloud DataWorks (MaxCompute) -> Cloud Composer + Dataform + BigQuery"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Orchestration + node metadata API (2024-05-18)
+    "alibabacloud-dataworks-public20240518>=9.0.0",
+    # Table metadata / Data Map API (2020-05-18)
+    "alibabacloud-dataworks-public20200518>=10.0.0",
+    # Tea runtime shared by all Alibaba SDKs
+    "alibabacloud-tea-openapi>=0.4.4",
+    # Read credentials from a .env file
+    "python-dotenv>=1.0.0",
+    # Retry / exponential backoff on API throttling
+    "tenacity>=9.0.0",
+    # MySQL client for the resumable checkpoint store
+    "pymysql>=1.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100

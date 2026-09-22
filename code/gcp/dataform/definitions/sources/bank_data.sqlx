@@ -1,0 +1,13 @@
+config {
+  type: "declaration",
+  tags: ["daily"],
+  database: "my-gcp-project",
+  schema: "dwh",
+  name: "bank_data",
+  description: "Raw house-buying campaign data (migrated from MaxCompute bank_data). " +
+               "Loaded by a sync pipeline; Dataform only reads it."
+}
+
+-- A declaration tells Dataform this table already exists in BigQuery.
+-- It does NOT create the table; it just lets other models use ref("bank_data")
+-- and resolves the name to my-gcp-project.dwh.bank_data at compile time.

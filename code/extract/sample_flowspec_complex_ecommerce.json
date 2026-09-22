@@ -1,0 +1,250 @@
+{
+  "metadata": {
+    "tenantId": "52425742456XXXX",
+    "projectId": "307XXXX",
+    "uuid": "999911112222333XXX"
+  },
+  "kind": "CycleWorkflow",
+  "version": "1.1.0",
+  "spec": {
+    "name": "ecommerce_daily_transform",
+    "id": "999911112222333XXX",
+    "type": "CycleWorkflow",
+    "owner": "110755000425XXXX",
+    "workflows": [
+      {
+        "id": "999911112222333XXX",
+        "name": "ecommerce_daily_transform",
+        "script": {
+          "path": "Business/ecommerce_daily_transform",
+          "runtime": { "command": "WORKFLOW" }
+        },
+        "trigger": {
+          "type": "Scheduler",
+          "cron": "00 03 00 * * ?",
+          "startTime": "2024-06-01 00:00:00",
+          "endTime": "9999-01-01 00:00:00",
+          "timezone": "Asia/Jakarta"
+        },
+        "strategy": {
+          "timeout": 0,
+          "instanceMode": "T+1",
+          "rerunMode": "Allowed",
+          "rerunTimes": 2,
+          "rerunInterval": 120000
+        },
+        "variables": [
+          { "id": "v_bizdate",  "name": "bizdate",   "scope": "Workflow", "type": "System",  "value": "${bizdate}" },
+          { "id": "v_region",   "name": "region",    "scope": "Workflow", "type": "Custom",  "value": "sea" },
+          { "id": "v_quality",  "name": "min_rows",  "scope": "Workflow", "type": "Custom",  "value": "100" },
+          { "id": "v_env",      "name": "env",       "scope": "Workflow", "type": "Custom",  "value": "prod" }
+        ],
+        "nodes": [
+          {
+            "id": "n_start",
+            "name": "pipeline_start",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_start",
+              "path": "Business/ecommerce_daily_transform/pipeline_start",
+              "runtime": { "command": "VIRTUAL" }
+            },
+            "outputs": {
+              "nodeOutputs": [ { "data": "n_start", "artifactType": "NodeOutput" } ]
+            }
+          },
+          {
+            "id": "n_sync_orders",
+            "name": "sync_raw_orders",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_sync_orders",
+              "path": "Business/ecommerce_daily_transform/sync_raw_orders",
+              "language": "odps-sql",
+              "runtime": { "command": "ODPS_SQL", "commandTypeId": 10 },
+              "content": "INSERT OVERWRITE TABLE ods_raw_orders PARTITION (pt='${bizdate}')\nSELECT order_id, user_id, product_id, quantity, price, order_ts\nFROM oss_raw_orders\nWHERE region = '${region}';"
+            },
+            "inputs": {
+              "tables": [ { "guid": "odps.ecommerce.oss_raw_orders" } ]
+            },
+            "outputs": {
+              "tables": [ { "guid": "odps.ecommerce.ods_raw_orders" } ],
+              "nodeOutputs": [ { "data": "n_sync_orders", "artifactType": "NodeOutput" } ]
+            }
+          },
+          {
+            "id": "n_sync_users",
+            "name": "sync_raw_users",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_sync_users",
+              "path": "Business/ecommerce_daily_transform/sync_raw_users",
+              "language": "odps-sql",
+              "runtime": { "command": "ODPS_SQL", "commandTypeId": 10 },
+              "content": "INSERT OVERWRITE TABLE ods_raw_users PARTITION (pt='${bizdate}')\nSELECT user_id, name, email, country, signup_date\nFROM mysql_users\nWHERE is_active = 1;"
+            },
+            "inputs": {
+              "tables": [ { "guid": "odps.ecommerce.mysql_users" } ]
+            },
+            "outputs": {
+              "tables": [ { "guid": "odps.ecommerce.ods_raw_users" } ],
+              "nodeOutputs": [ { "data": "n_sync_users", "artifactType": "NodeOutput" } ]
+            }
+          },
+          {
+            "id": "n_transform",
+            "name": "dwd_order_facts",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_transform",
+              "path": "Business/ecommerce_daily_transform/dwd_order_facts",
+              "language": "odps-sql",
+              "runtime": { "command": "ODPS_SQL", "commandTypeId": 10 },
+              "content": "INSERT OVERWRITE TABLE dwd_order_facts PARTITION (pt='${bizdate}')\nSELECT\n  o.order_id,\n  o.user_id,\n  u.name              AS user_name,\n  o.product_id,\n  o.quantity,\n  o.price,\n  o.quantity * o.price AS line_total,\n  u.country,\n  o.order_ts,\n  DATE(o.order_ts)    AS order_date\nFROM ods_raw_orders o\nJOIN ods_raw_users u\n  ON o.user_id = u.user_id\nWHERE o.pt = '${bizdate}'\n  AND u.pt   = '${bizdate}';"
+            },
+            "inputs": {
+              "tables": [
+                { "guid": "odps.ecommerce.ods_raw_orders" },
+                { "guid": "odps.ecommerce.ods_raw_users" }
+              ],
+              "nodeOutputs": [ { "data": "n_sync_orders", "artifactType": "NodeOutput" } ]
+            },
+            "outputs": {
+              "tables": [ { "guid": "odps.ecommerce.dwd_order_facts" } ],
+              "nodeOutputs": [ { "data": "n_transform", "artifactType": "NodeOutput" } ]
+            }
+          },
+          {
+            "id": "n_quality",
+            "name": "quality_check",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_quality",
+              "path": "Business/ecommerce_daily_transform/quality_check",
+              "language": "python",
+              "runtime": { "command": "PYODPS", "commandTypeId": 12 },
+              "content": "from odps import ODPS\nimport sys\n\no = ODPS.from_env()\ndf = o.get_table('dwd_order_facts', partition='pt=${bizdate}').to_df()\ncount = df.count()\nmin_rows = int(${min_rows})\n\nif count < min_rows:\n    print(f'QUALITY FAIL: only {count} rows (minimum {min_rows})', file=sys.stderr)\n    sys.exit(1)\n\nprint(f'QUALITY PASS: {count} rows')"
+            },
+            "inputs": {
+              "tables": [ { "guid": "odps.ecommerce.dwd_order_facts" } ],
+              "nodeOutputs": [ { "data": "n_transform", "artifactType": "NodeOutput" } ]
+            },
+            "outputs": {
+              "nodeOutputs": [ { "data": "n_quality", "artifactType": "NodeOutput" } ]
+            }
+          },
+          {
+            "id": "n_branch",
+            "name": "branch_on_quality",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_branch",
+              "path": "Business/ecommerce_daily_transform/branch_on_quality",
+              "runtime": { "command": "VIRTUAL" }
+            },
+            "branches": [
+              {
+                "condition": "quality == 'PASS'",
+                "goto": { "nodeId": "n_load", "type": "Normal" }
+              },
+              {
+                "condition": "quality == 'FAIL'",
+                "goto": { "nodeId": "n_notify", "type": "Normal" }
+              }
+            ],
+            "inputs": {
+              "nodeOutputs": [ { "data": "n_quality", "artifactType": "NodeOutput" } ]
+            },
+            "outputs": {
+              "nodeOutputs": [ { "data": "n_branch", "artifactType": "NodeOutput" } ]
+            }
+          },
+          {
+            "id": "n_load",
+            "name": "load_agg_daily",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_load",
+              "path": "Business/ecommerce_daily_transform/load_agg_daily",
+              "language": "odps-sql",
+              "runtime": { "command": "ODPS_SQL", "commandTypeId": 10 },
+              "content": "INSERT OVERWRITE TABLE dws_agg_daily PARTITION (pt='${bizdate}')\nSELECT\n  country,\n  DATE(order_date)           AS order_date,\n  COUNT(DISTINCT user_id)    AS unique_buyers,\n  COUNT(DISTINCT order_id)   AS total_orders,\n  SUM(line_total)            AS total_revenue,\n  COUNT(DISTINCT product_id) AS unique_products\nFROM dwd_order_facts\nWHERE pt = '${bizdate}'\nGROUP BY country, DATE(order_date);"
+            },
+            "inputs": {
+              "tables": [ { "guid": "odps.ecommerce.dwd_order_facts" } ],
+              "nodeOutputs": [ { "data": "n_branch", "artifactType": "NodeOutput" } ]
+            },
+            "outputs": {
+              "tables": [ { "guid": "odps.ecommerce.dws_agg_daily" } ],
+              "nodeOutputs": [ { "data": "n_load", "artifactType": "NodeOutput" } ]
+            }
+          },
+          {
+            "id": "n_notify",
+            "name": "alert_failure",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_notify",
+              "path": "Business/ecommerce_daily_transform/alert_failure",
+              "runtime": { "command": "DIDE_SHELL", "commandTypeId": 5 },
+              "content": "#!/bin/bash\n# send alert to Alibaba Message Service\ncurl -X POST https://alerts.internal/ecomm/quality-fail \\\n  -H 'Content-Type: application/json' \\\n  -d \"$(cat <<EOF\n{\n  \"workflow\": \"ecommerce_daily_transform\",\n  \"bizdate\": \"${bizdate}\",\n  \"message\": \"quality check failed for ${bizdate}\"\n}\nEOF\n)\""
+            },
+            "inputs": {
+              "nodeOutputs": [ { "data": "n_branch", "artifactType": "NodeOutput" } ]
+            },
+            "outputs": {
+              "nodeOutputs": [ { "data": "n_notify", "artifactType": "NodeOutput" } ]
+            }
+          },
+          {
+            "id": "n_log",
+            "name": "audit_log",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_log",
+              "path": "Business/ecommerce_daily_transform/audit_log",
+              "language": "python",
+              "runtime": { "command": "PYODPS", "commandTypeId": 12 },
+              "content": "from odps import ODPS\nimport datetime\n\no = ODPS.from_env()\nlog_table = o.get_table('dwd_audit_log')\n\nrow = {\n    'workflow': 'ecommerce_daily_transform',\n    'bizdate': '${bizdate}',\n    'completed_at': datetime.datetime.now().isoformat(),\n    'status': 'SUCCESS'\n}\nlog_table.write(row)\nprint('Audit record written')"
+            },
+            "inputs": {
+              "tables": [ { "guid": "odps.ecommerce.dwd_audit_log" } ],
+              "nodeOutputs": [ { "data": "n_load", "artifactType": "NodeOutput" } ]
+            },
+            "outputs": {
+              "nodeOutputs": [ { "data": "n_log", "artifactType": "NodeOutput" } ]
+            }
+          },
+          {
+            "id": "n_end",
+            "name": "pipeline_end",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_end",
+              "path": "Business/ecommerce_daily_transform/pipeline_end",
+              "runtime": { "command": "VIRTUAL" }
+            },
+            "inputs": {
+              "nodeOutputs": [ { "data": "n_log", "artifactType": "NodeOutput" } ]
+            },
+            "outputs": {
+              "nodeOutputs": [ { "data": "n_end", "artifactType": "NodeOutput" } ]
+            }
+          }
+        ],
+        "flow": [
+          { "nodeId": "n_start",        "depends": [] },
+          { "nodeId": "n_sync_orders",  "depends": [ { "nodeId": "n_start",       "type": "Normal" } ] },
+          { "nodeId": "n_sync_users",   "depends": [ { "nodeId": "n_start",       "type": "Normal" } ] },
+          { "nodeId": "n_transform",    "depends": [ { "nodeId": "n_sync_orders", "type": "Normal" } ] },
+          { "nodeId": "n_quality",      "depends": [ { "nodeId": "n_transform",   "type": "Normal" } ] },
+          { "nodeId": "n_branch",       "depends": [ { "nodeId": "n_quality",     "type": "Normal" } ] },
+          { "nodeId": "n_load",         "depends": [ { "nodeId": "n_branch",      "type": "Normal" } ] },
+          { "nodeId": "n_notify",       "depends": [ { "nodeId": "n_branch",      "type": "Normal" } ] },
+          { "nodeId": "n_log",          "depends": [ { "nodeId": "n_load",        "type": "Normal" } ] },
+          { "nodeId": "n_end",          "depends": [ { "nodeId": "n_log",         "type": "Normal" } ] }
+        ]
+      }
+    ]
+  }
+}

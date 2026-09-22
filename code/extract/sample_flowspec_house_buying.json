@@ -1,0 +1,129 @@
+{
+  "metadata": {
+    "tenantId": "52425742456XXXX",
+    "projectId": "307XXXX",
+    "uuid": "463497880880954XXXX"
+  },
+  "kind": "CycleWorkflow",
+  "version": "1.1.0",
+  "spec": {
+    "name": "house_buying_analysis",
+    "id": "463497880880954XXXX",
+    "type": "CycleWorkflow",
+    "owner": "110755000425XXXX",
+    "workflows": [
+      {
+        "id": "463497880880954XXXX",
+        "name": "house_buying_analysis",
+        "script": {
+          "path": "Business/house_buying_analysis",
+          "runtime": { "command": "WORKFLOW" }
+        },
+        "trigger": {
+          "type": "Scheduler",
+          "cron": "00 02 00 * * ?",
+          "startTime": "2025-01-01 00:00:00",
+          "endTime": "9999-01-01 00:00:00",
+          "timezone": "Asia/Jakarta"
+        },
+        "strategy": {
+          "timeout": 0,
+          "instanceMode": "T+1",
+          "rerunMode": "Allowed",
+          "rerunTimes": 3,
+          "rerunInterval": 180000
+        },
+        "variables": [
+          {
+            "id": "v_bizdate",
+            "name": "bizdate",
+            "scope": "Workflow",
+            "type": "System",
+            "value": "${bizdate}"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "n_start",
+            "name": "workshop_start",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_start",
+              "path": "Business/house_buying_analysis/workshop_start",
+              "runtime": { "command": "VIRTUAL" }
+            },
+            "outputs": {
+              "nodeOutputs": [
+                { "data": "n_start", "artifactType": "NodeOutput" }
+              ]
+            }
+          },
+          {
+            "id": "n_ddl",
+            "name": "ddl_result_table",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_ddl",
+              "path": "Business/house_buying_analysis/ddl_result_table",
+              "language": "odps-sql",
+              "runtime": { "command": "ODPS_SQL", "commandTypeId": 10 },
+              "content": "CREATE TABLE IF NOT EXISTS result_table\n(\n  education STRING COMMENT 'Education level',\n  num       BIGINT  COMMENT 'Number of persons'\n);"
+            },
+            "inputs": {
+              "nodeOutputs": [
+                { "data": "n_start", "artifactType": "NodeOutput" }
+              ]
+            },
+            "outputs": {
+              "tables": [
+                { "guid": "odps.house_buying.result_table" }
+              ],
+              "nodeOutputs": [
+                { "data": "n_ddl", "artifactType": "NodeOutput" }
+              ]
+            }
+          },
+          {
+            "id": "n_insert",
+            "name": "insert_result_table",
+            "recurrence": "Normal",
+            "script": {
+              "id": "s_insert",
+              "path": "Business/house_buying_analysis/insert_result_table",
+              "language": "odps-sql",
+              "runtime": { "command": "ODPS_SQL", "commandTypeId": 10 },
+              "content": "INSERT OVERWRITE TABLE result_table\nSELECT education\n     , COUNT(marital) AS num\nFROM bank_data\nWHERE housing = 'yes'\n  AND marital = 'single'\nGROUP BY education;"
+            },
+            "inputs": {
+              "tables": [
+                { "guid": "odps.house_buying.bank_data" }
+              ],
+              "nodeOutputs": [
+                { "data": "n_ddl", "artifactType": "NodeOutput" }
+              ]
+            },
+            "outputs": {
+              "tables": [
+                { "guid": "odps.house_buying.result_table" }
+              ],
+              "nodeOutputs": [
+                { "data": "n_insert", "artifactType": "NodeOutput" }
+              ]
+            }
+          }
+        ],
+        "flow": [
+          { "nodeId": "n_start", "depends": [] },
+          {
+            "nodeId": "n_ddl",
+            "depends": [ { "nodeId": "n_start", "type": "Normal" } ]
+          },
+          {
+            "nodeId": "n_insert",
+            "depends": [ { "nodeId": "n_ddl", "type": "Normal" } ]
+          }
+        ]
+      }
+    ]
+  }
+}
